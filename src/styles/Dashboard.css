@@ -1,0 +1,134 @@
+/* Dashboard Styles */
+.notes-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background: white;
+}
+
+.notes-sidebar {
+  width: 280px;
+  background: rgba(255, 255, 255, 0.9);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.notes-stats {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 8px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #6366f1;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.editor-title {
+  font-size: 24px;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.export-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.delete-btn {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.editor-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.word-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.save-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-content {
+  flex: 1;
+  padding: 20px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.error-banner {
+  padding: 12px 20px;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-close {
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  opacity: 0.7;
+}
+
+.error-close:hover {
+  opacity: 1;
+}
