@@ -7,8 +7,13 @@ const API_BASE_URL = (import.meta as any).env?.VITE_API_URL
   ? String((import.meta as any).env.VITE_API_URL).replace(/\/$/, '')
   : 'http://localhost:5001';
 
+// Construct baseURL - if API_BASE_URL already ends with /api, use it as-is, otherwise append /api
+const baseURL = API_BASE_URL.endsWith('/api') 
+  ? API_BASE_URL 
+  : `${API_BASE_URL}/api`;
+
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL,
   timeout: 10000,
 });
 
