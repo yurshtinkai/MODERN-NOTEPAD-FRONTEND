@@ -1835,3 +1835,56 @@ html {
   .profile-grid { grid-template-columns: 1fr; }
 }
 
+/* --- PASTE AT THE BOTTOM OF App.css --- */
+
+/* New Mobile Layout (Split-Screen) */
+@media (max-width: 768px) {
+  
+  /* Show both panels */
+  .notes-container {
+    flex-direction: row; /* Side-by-side */
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 1. Sidebar Panel */
+  .notes-sidebar {
+    width: 40%; /* Sidebar takes 40% of the screen */
+    height: 100%;
+    position: relative; /* Not absolute */
+    transform: translateX(0); /* Always visible */
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+  }
+
+  /* 2. Editor Panel */
+  .editor-container {
+    width: 60%; /* Editor takes 60% */
+    height: 100%;
+    position: relative; /* Not absolute */
+    transform: translateX(0); /* Always visible */
+  }
+
+  /* 3. Logic to show/hide based on note selection */
+  .notes-container.mobile-editor-open .notes-sidebar {
+    display: none; /* Hide sidebar when note is selected */
+  }
+  .notes-container.mobile-editor-open .editor-container {
+    width: 100%; /* Make editor full width when note is selected */
+  }
+
+  /* 4. Hide the hamburger/back buttons */
+  .mobile-menu-btn,
+  .mobile-back-btn {
+    display: none;
+  }
+
+  /* 5. Hide the user details in header to make space */
+  .user-details {
+    display: none;
+  }
+
+  /* 6. Remove the backdrop */
+  .notes-container::before {
+    display: none;
+  }
+}
