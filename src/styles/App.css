@@ -1835,4 +1835,227 @@ html {
   .profile-grid { grid-template-columns: 1fr; }
 }
 
+/* --- PASTE AT THE BOTTOM OF App.css --- */
 
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  
+  /* App Container - Full height on mobile */
+  .app-container {
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile */
+    overflow: hidden;
+  }
+
+  /* Header - Compact on mobile */
+  .app-header {
+    padding: 16px 20px;
+    gap: 12px;
+  }
+
+  .header-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .header-left h1 {
+    font-size: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  .header-right {
+    gap: 8px;
+  }
+
+  .user-info {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .user-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .user-details {
+    display: none; /* Hide user details on mobile to save space */
+  }
+
+  .logout-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* Notes Container - Stack vertically on mobile */
+  .notes-container {
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Mobile sidebar backdrop overlay */
+  .notes-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    pointer-events: none;
+  }
+
+  .notes-container.mobile-sidebar-open::before {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
+  }
+
+  /* Sidebar - Full width drawer on mobile */
+  .notes-sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .notes-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Note Items - Card style on mobile */
+  .notes-list {
+    padding: 8px;
+  }
+
+  .note-item {
+    margin: 8px 0;
+    padding: 16px;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .note-preview {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+    margin-bottom: 8px;
+  }
+
+  /* Editor Container - Full screen on mobile when note selected */
+  .editor-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    background: white;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    overflow-y: auto;
+  }
+
+  .editor-container.mobile-open {
+    transform: translateX(0);
+    z-index: 51;
+  }
+
+  .editor-container.mobile-hidden {
+    transform: translateX(100%);
+    z-index: 50;
+  }
+
+  .editor-header {
+    padding: 16px 20px;
+    gap: 12px;
+  }
+
+  .note-title-input {
+    font-size: 20px;
+  }
+
+  .editor-meta {
+    font-size: 12px;
+    gap: 12px;
+  }
+
+  /* Mobile Menu Button */
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+    transition: all 0.2s;
+  }
+
+  .mobile-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  /* Mobile Back Button */
+  .mobile-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+    margin-right: 12px;
+    transition: all 0.2s;
+  }
+
+  .mobile-back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Hide mobile controls on desktop */
+  .mobile-menu-btn,
+  .mobile-back-btn {
+    display: none; /* Default hide */
+  }
+
+  @media (max-width: 768px) {
+    .mobile-menu-btn,
+    .mobile-back-btn {
+      display: flex; /* Show on mobile */
+    }
+  }
+
+  @media (max-width: 480px) {
+    .app-header h1 { font-size: 18px; }
+    .header-logo { display: none; }
+    .logout-btn { padding: 6px 10px; font-size: 11px; }
+    .logout-btn span { display: none; }
+  }
+}
