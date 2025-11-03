@@ -1,5 +1,5 @@
 // src/pages/DashboardPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import type { Note } from '../types';
 import * as api from '../services/api';
@@ -40,21 +40,28 @@ const DashboardPage: React.FC = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  // Mobile navigation state
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  // Mobile navigation state - show sidebar by default on mobile when no note is selected
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(window.innerWidth <= 768);
 
   // Handle window resize for mobile detection
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-      if (window.innerWidth > 768) {
+      const nowMobile = window.innerWidth <= 768;
+      setIsMobile(nowMobile);
+      if (!nowMobile) {
+        // On desktop, always show sidebar
         setIsMobileSidebarOpen(false);
+      } else {
+        // On mobile, show sidebar if no note is selected
+        if (!currentNoteId) {
+          setIsMobileSidebarOpen(true);
+        }
       }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [currentNoteId]);
 
   // Fetch initial notes from API
   useEffect(() => {
@@ -112,7 +119,19 @@ const DashboardPage: React.FC = () => {
   // Handler for closing editor on mobile
   const handleCloseEditor = () => {
     setCurrentNoteId(null);
+    // On mobile, show sidebar when closing editor
+    if (isMobile) {
+      setIsMobileSidebarOpen(true);
+    }
   };
+
+  // Update sidebar visibility when note selection changes
+  useEffect(() => {
+    if (isMobile) {
+      // On mobile: show sidebar when no note selected, hide when note is selected
+      setIsMobileSidebarOpen(!currentNoteId);
+    }
+  }, [currentNoteId, isMobile]);
 
   // Handler to delete a note
   const handleDeleteNote = async (id: string) => {
@@ -154,7 +173,17 @@ const DashboardPage: React.FC = () => {
     note.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const activeNote = (showArchive ? archived : notes).find((note) => note._id === currentNoteId);
+  // Find the active note - search in both notes and archived if needed
+  const activeNote = useMemo(() => {
+    if (!currentNoteId) return null;
+    const source = showArchive ? archived : notes;
+    const found = source.find((note) => note._id === currentNoteId);
+    // Debug in development
+    if ((import.meta as any).env?.MODE === 'development' && currentNoteId && !found) {
+      console.warn('Note not found:', { currentNoteId, notesCount: notes.length, archivedCount: archived.length });
+    }
+    return found || null;
+  }, [currentNoteId, notes, archived, showArchive]);
 
   // Get user details for header
   const userName = user?.username || 'User';
@@ -183,8 +212,8 @@ const DashboardPage: React.FC = () => {
         {/* New Header from index.html */}
         <div className="app-header">
           <div className="header-left">
-            {/* Mobile Menu Button */}
-            {isMobile && !currentNoteId && (
+            {/* Mobile Menu Button - Show when sidebar is closed or when no note is selected */}
+            {isMobile && (!currentNoteId || !isMobileSidebarOpen) && (
               <button 
                 className="mobile-menu-btn" 
                 onClick={() => setIsMobileSidebarOpen(true)}
@@ -197,7 +226,7 @@ const DashboardPage: React.FC = () => {
                 </svg>
               </button>
             )}
-            {/* Mobile Back Button */}
+            {/* Mobile Back Button - Show when a note is selected */}
             {isMobile && currentNoteId && (
               <button 
                 className="mobile-back-btn" 
@@ -316,7 +345,7 @@ const DashboardPage: React.FC = () => {
               onClick={() => setIsMobileSidebarOpen(false)}
             />
           )}
-          <div className={`editor-container ${isMobile && currentNoteId ? 'mobile-open' : ''}`}>
+          <div className={`editor-container ${isMobile && currentNoteId ? 'mobile-open' : isMobile ? 'mobile-hidden' : ''}`}>
             {activeNote ? (
               <NoteEditor
                 key={activeNote._id} // Force re-render when note changes
@@ -326,7 +355,8 @@ const DashboardPage: React.FC = () => {
                 readOnly={showArchive}
               />
             ) : (
-              !isMobile && <EmptyState />
+              // Only show EmptyState on desktop, or on mobile when no note selected and sidebar is not open
+              (!isMobile || !isMobileSidebarOpen) && <EmptyState />
             )}
           </div>
         </div>

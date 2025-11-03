@@ -1011,6 +1011,7 @@ html {
   .notes-container {
     flex-direction: column;
     position: relative;
+    overflow: hidden;
   }
 
   /* Mobile sidebar backdrop overlay */
@@ -1026,11 +1027,13 @@ html {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    pointer-events: none;
   }
 
   .notes-container.mobile-sidebar-open::before {
     opacity: 1;
     visibility: visible;
+    pointer-events: all;
   }
 
   /* Sidebar - Full width drawer on mobile */
@@ -1048,6 +1051,11 @@ html {
 
   .notes-sidebar.mobile-open {
     transform: translateX(0);
+  }
+
+  /* On mobile, show sidebar by default when no note is selected */
+  .notes-sidebar:not(.mobile-open) {
+    /* Keep sidebar hidden until user opens it */
   }
 
   /* Sidebar Header - Compact */
@@ -1131,10 +1139,17 @@ html {
     background: white;
     transform: translateX(100%);
     transition: transform 0.3s ease-in-out;
+    overflow-y: auto;
   }
 
   .editor-container.mobile-open {
     transform: translateX(0);
+    z-index: 51;
+  }
+
+  .editor-container.mobile-hidden {
+    transform: translateX(100%);
+    z-index: 50;
   }
 
   .editor-header {
