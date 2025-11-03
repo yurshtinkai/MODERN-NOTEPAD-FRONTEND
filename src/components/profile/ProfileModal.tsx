@@ -68,7 +68,12 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userName, 
     <div className="profile-container" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="profile-modal">
         <div className="profile-header">
-          <button type="button" className="profile-close" onClick={onClose} aria-label="Close profile">
+          <button
+            type="button"
+            className="profile-close"
+            onClick={(e)=>{ e.stopPropagation(); onClose(); }}
+            aria-label="Close profile"
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
           <div className="profile-user-info">

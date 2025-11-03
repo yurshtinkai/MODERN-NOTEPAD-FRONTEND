@@ -1313,9 +1313,10 @@ html {
 /* Keep these auth link styles */
 .auth-link {
   text-align: center;
-  margin-top: 24px;
+  margin-top: 10px;
   font-size: 14px;
   color: #4a5568;
+  margin-left: 40px;
 }
 
 .auth-link a {
@@ -1368,13 +1369,13 @@ html {
 /* New Auth Page Container */
 .auth-split-container {
   width: 100%;
-  max-width: 1000px;
+  max-width: 900px;
   min-height: 500px;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   border-radius: 24px;
   display: flex;
-  gap: 32px;
+  gap: 2px;
   position: relative;
   z-index: 10;
   box-shadow: 
@@ -1486,7 +1487,7 @@ html {
 
 .login-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
   width: 100%;
   max-width: 400px;
 }
@@ -1497,12 +1498,14 @@ html {
   color: #1e293b;
   margin: 0 0 8px 0;
   letter-spacing: -0.5px;
+  margin-left: 45px;
 }
 
 .login-subtitle {
   font-size: 16px;
   color: #64748b;
   margin: 0;
+  margin-left: 40px;
 }
 
 .auth-form {
@@ -1751,7 +1754,8 @@ html {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  z-index: 1;
+  z-index: 10; /* ensure above header contents */
+  pointer-events: auto; /* ensure clickable on mobile */
 }
 
 .profile-close:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
