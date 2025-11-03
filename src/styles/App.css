@@ -333,7 +333,7 @@ html {
 }
 
 .auth-form {
-  padding: 32px;
+  padding: 27px;
   background: white; /* Added this from your screenshot */
 }
 
@@ -932,6 +932,12 @@ html {
 
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
+  /* Hide the login header on small screens (login page only) */
+  .login-header--login { display: none; }
+  /* Pull the form up to fill the removed header space */
+  .login-header--login + .auth-form { margin-top: -53px; }
+  /* Slightly reduce first group spacing on mobile */
+  .auth-form .form-group:first-child { margin-top: 15px; }
   .container {
     padding: 1rem; /* 16px -- UPDATED */
   }

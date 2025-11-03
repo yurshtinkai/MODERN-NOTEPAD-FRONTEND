@@ -52,7 +52,8 @@ const LoginPage: React.FC = () => {
     setError('');
     setIsLoading(true);
     try {
-      const { data } = await loginUser({ username, password });
+      const cleanUsername = username.trim();
+      const { data } = await loginUser({ username: cleanUsername, password });
       login(data.token, data.user);
       navigate('/dashboard');
     } catch (err: any) {
@@ -118,7 +119,7 @@ const LoginPage: React.FC = () => {
         <main className="auth-right" aria-label="Login form">
           {/* This wrapper div centers and nudges the content */}
           <div className="auth-right-content">
-            <div className="login-header">
+            <div className="login-header login-header--login">
               <h2 className="login-title">Welcome back</h2>
               <p className="login-subtitle">Log in to access your notes</p>
             </div>
