@@ -39,9 +39,7 @@ const DashboardPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   
-  // --- RE-ADDED MOBILE STATE ---
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  // This is the fix: Start with sidebar open on mobile
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(window.innerWidth <= 768);
 
   // Handle window resize for mobile detection
@@ -50,10 +48,8 @@ const DashboardPage: React.FC = () => {
       const nowMobile = window.innerWidth <= 768;
       setIsMobile(nowMobile);
       if (!nowMobile) {
-        // On desktop, always show sidebar (this state doesn't matter)
         setIsMobileSidebarOpen(false);
       } else {
-        // On mobile, show sidebar if no note is selected
         if (!currentNoteId) {
           setIsMobileSidebarOpen(true);
         }
@@ -98,7 +94,6 @@ const DashboardPage: React.FC = () => {
       });
       setNotes([newNote, ...notes]);
       setCurrentNoteId(newNote._id);
-      // On mobile, close sidebar and show editor
       if (isMobile) {
         setIsMobileSidebarOpen(false);
       }
@@ -110,7 +105,6 @@ const DashboardPage: React.FC = () => {
   // Handler for selecting a note (with mobile navigation)
   const handleSelectNote = (id: string) => {
     setCurrentNoteId(id);
-    // On mobile, close sidebar after selecting note
     if (isMobile) {
       setIsMobileSidebarOpen(false);
     }
@@ -119,7 +113,6 @@ const DashboardPage: React.FC = () => {
   // Handler for closing editor on mobile
   const handleCloseEditor = () => {
     setCurrentNoteId(null);
-    // On mobile, show sidebar when closing editor
     if (isMobile) {
       setIsMobileSidebarOpen(true);
     }
@@ -128,11 +121,9 @@ const DashboardPage: React.FC = () => {
   // Update sidebar visibility when note selection changes
   useEffect(() => {
     if (isMobile) {
-      // On mobile: show sidebar when no note selected, hide when note is selected
       setIsMobileSidebarOpen(!currentNoteId);
     }
   }, [currentNoteId, isMobile]);
-  // --- END OF RE-ADDED CODE ---
 
   // Handler to delete a note
   const handleDeleteNote = async (id: string) => {
@@ -196,12 +187,12 @@ const DashboardPage: React.FC = () => {
         
         <div className="app-header">
           <div className="header-left">
-            {/* --- RE-ADDED MOBILE BUTTONS --- */}
             {isMobile && !isMobileSidebarOpen && (
               <button 
                 className="mobile-menu-btn" 
                 onClick={() => setIsMobileSidebarOpen(true)}
                 aria-label="Open menu"
+                style={{ display: 'none' }} // <-- 1. HAMBURGER BUTTON IS HIDDEN
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="3" y1="12" x2="21" y2="12" />
@@ -215,13 +206,13 @@ const DashboardPage: React.FC = () => {
                 className="mobile-back-btn" 
                 onClick={handleCloseEditor}
                 aria-label="Back to notes"
+                // <-- THE BACK ARROW IS STILL VISIBLE (NO HIDE STYLE)
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
               </button>
             )}
-            {/* --- END RE-ADDED BUTTONS --- */}
 
             <div className="header-logo">
               <HeaderLogo />
@@ -252,13 +243,11 @@ const DashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* --- RE-ADDED MOBILE CONTAINER LOGIC --- */}
         <div className={`notes-container ${isMobileSidebarOpen ? 'mobile-sidebar-open' : ''}`}>
           {isLoading ? (
             <div style={{ padding: '20px' }}>Loading notes...</div>
           ) : (
             <div className={`notes-sidebar ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
-              {/* Mobile sidebar close button */}
               {isMobile && isMobileSidebarOpen && (
                 <div 
                   style={{
@@ -277,12 +266,12 @@ const DashboardPage: React.FC = () => {
                       borderRadius: '8px',
                       width: '36px',
                       height: '36px',
-                      display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
                       color: '#475569',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      display: 'none' // <-- 2. 'X' CLOSE BUTTON IS HIDDEN
                     }}
                     aria-label="Close sidebar"
                   >
@@ -314,7 +303,6 @@ const DashboardPage: React.FC = () => {
               />
             </div>
           )}
-          {/* Click backdrop to close sidebar */}
           {isMobile && isMobileSidebarOpen && (
             <div
               style={{
@@ -343,7 +331,6 @@ const DashboardPage: React.FC = () => {
             )}
           </div>
         </div>
-        {/* --- END RE-ADDED LOGIC --- */}
       </div>
       
       <ProfileModal
