@@ -37,6 +37,13 @@ const NoteIcon = () => (
     <line x1="16" y1="17" x2="8" y2="17" />
   </svg>
 );
+
+const DeleteIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6" />
+  </svg>
+);
 // --- End of SVGs ---
 
 // Helper to count words
@@ -60,15 +67,17 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
     return total + countWords(note.content);
   }, 0);
 
+  // FIX: The outer <div className="notes-sidebar"> has been replaced with a React Fragment <>
+  // This is because DashboardPage.tsx already provides the .notes-sidebar div wrapper.
   return (
-    <div className="notes-sidebar">
+    <>
       <div className="sidebar-header">
         
         {/* Stats from index.html */}
         <div className="sidebar-stats">
           <div className="stat-item">
             <div className="stat-number">{notes.length}</div>
-            <div className="stat-label">Notes</div>
+            <div className="stat-label">{isArchive ? 'Archived' : 'Notes'}</div>
           </div>
           <div className="stat-item">
             <div className="stat-number">{totalWords}</div>
@@ -81,7 +90,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
           <input
             type="text"
             className="search-input"
-            placeholder="Search notes..."
+            placeholder={isArchive ? "Search archive..." : "Search notes..."}
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
           />
@@ -99,7 +108,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
       <div className="notes-list" id="notesList">
         {notes.length === 0 ? (
           <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
-            {searchTerm ? 'No notes found' : 'No notes yet'}
+            {searchTerm ? 'No notes found' : (isArchive ? 'Archive is empty' : 'No notes yet')}
           </div>
         ) : (
           notes.map((note) => (
@@ -123,30 +132,34 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                   {formatDate(note.createdAt)} • {countWords(note.content)} words
                 </div>
               </div>
+
+              {/* Delete button for archive */}
               {isArchive && (
                 <button
                   aria-label="Delete permanently"
+                  title="Delete permanently"
                   onClick={(e) => {
-                    e.stopPropagation();
+                    e.stopPropagation(); // Prevent note selection
                     if (onDeleteArchived) onDeleteArchived(note._id);
                   }}
-                  style={{
-                    marginLeft: '8px',
+                  className="action-btn delete-note-btn"
+                  style={{ 
+                    position: 'absolute', // Position it within the note item
+                    top: '16px', 
+                    right: '16px',
+                    padding: '6px', // Make it smaller
                     background: '#fee2e2',
                     color: '#dc2626',
                     border: '1px solid #fecaca',
-                    borderRadius: '8px',
-                    padding: '6px 8px',
-                    cursor: 'pointer',
                   }}
                 >
-                  Delete
+                  <DeleteIcon />
                 </button>
               )}
             </div>
           ))
         )}
       </div>
-    </div>
+    </> // <-- This was changed from </div>
   );
 };
