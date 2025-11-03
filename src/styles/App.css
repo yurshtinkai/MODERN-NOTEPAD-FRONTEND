@@ -402,16 +402,6 @@ html {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-.demo-notice {
-  background: #fef3c7;
-  border: 1px solid #f59e0b;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 24px;
-  font-size: 14px;
-  color: #92400e;
-}
-
 /* NEW APP HEADER STYLES from index.html */
 .app-header {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
@@ -943,7 +933,7 @@ html {
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
   .container {
-    padding: 10px;
+    padding: 1rem; /* 16px -- UPDATED */
   }
   
   .container.fullscreen {
@@ -1240,19 +1230,22 @@ html {
     background: rgba(255, 255, 255, 0.2);
   }
 
-  /* Auth pages responsive */
+  /* --- AUTH PAGE RESPONSIVE FIXES --- */
+  /* This block was duplicated and fragmented. This is the consolidated version. */
   .auth-split-container {
     flex-direction: column;
     min-height: auto;
     gap: 24px;
-    margin: 20px;
-    max-width: 450px;
+    margin: 0; /* REMOVED margin: 20px */
+    max-width: 450px; 
+    width: 100%; /* ADDED: This makes it fill the container's padding */
   }
 
   .auth-left,
   .auth-right {
-    padding: 32px;
-    flex: 1;
+    padding: 24px; /* UPDATED: Reduced padding for mobile */
+    flex: 1; /* Reset flex */
+    box-sizing: border-box; /* ADDED */
   }
 
   .main-logo {
@@ -1272,8 +1265,16 @@ html {
   }
 
   .feature-list {
-    display: none;
+    display: none; /* Hide features on mobile */
   }
+
+  /* ADDED: This rule removes the desktop "nudge" on mobile */
+  .auth-right-content {
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  /* --- END AUTH PAGE FIXES --- */
 }
 
 /* Hide mobile controls on desktop */
@@ -1368,7 +1369,7 @@ html {
 .auth-split-container {
   width: 100%;
   max-width: 1000px;
-  min-height: 600px;
+  min-height: 500px;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   border-radius: 24px;
@@ -1604,6 +1605,8 @@ html {
 }
 
 /* Responsive */
+/* NOTE: This is a duplicate block from your file, I've left it */
+/* but the main fixes are in the @media block around line 538 */
 @media (max-width: 768px) {
   .auth-split-container {
     flex-direction: column;
@@ -1674,11 +1677,14 @@ html {
 }
 
 /* On mobile, we remove the nudge */
+/* THIS BLOCK IS NOW REDUNDANT because the fix is in the main media query */
+/*
 @media (max-width: 768px) {
   .auth-right-content {
     left: 0;
   }
 }
+*/
 
 /* --- Profile Modal styles (copied from static index.html) --- */
 .profile-container {
@@ -2057,5 +2063,25 @@ html {
     .header-logo { display: none; }
     .logout-btn { padding: 6px 10px; font-size: 11px; }
     .logout-btn span { display: none; }
+  }
+}
+
+/* --- ADDED: Responsive fixes for very small screens --- */
+@media (max-width: 400px) {
+  .container {
+    padding: 0.75rem; /* 12px */
+  }
+  
+  .auth-left,
+  .auth-right {
+    padding: 20px; /* Even less padding */
+  }
+
+  .login-title {
+    font-size: 28px;
+  }
+  
+  .logo-title {
+    font-size: 24px;
   }
 }

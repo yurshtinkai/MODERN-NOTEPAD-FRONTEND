@@ -220,11 +220,21 @@ const DashboardPage: React.FC = () => {
             <h1>Modern Notepad</h1>
           </div>
           <div className="header-right">
-            <div className="user-info">
+            <div
+              className="user-info"
+              style={{ cursor: 'pointer' }}
+              title="View profile"
+              role="button"
+              tabIndex={0}
+              onClick={() => setIsProfileOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') setIsProfileOpen(true);
+              }}
+            >
               <div className="user-avatar">{userAvatar}</div>
               <div className="user-details">
                 <div className="user-name">{userName}</div>
-                <div className="user-role" style={{ cursor: 'pointer' }} onClick={() => setIsProfileOpen(true)}>Writer</div>
+                <div className="user-role">Writer</div>
               </div>
             </div>
             <button className="logout-btn" onClick={async ()=>{ setShowArchive(!showArchive); if (!showArchive) { await fetchArchived(); } }}>

@@ -123,8 +123,6 @@ const LoginPage: React.FC = () => {
               <p className="login-subtitle">Log in to access your notes</p>
             </div>
 
-            <div className="demo-notice">Demo credentials: demo@example.com / demo123</div>
-
             <form className="auth-form" onSubmit={handleSubmit} noValidate>
               <div className="form-group">
                 <label htmlFor="username">Username</label>
