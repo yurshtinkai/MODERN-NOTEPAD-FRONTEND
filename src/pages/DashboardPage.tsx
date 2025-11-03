@@ -40,6 +40,21 @@ const DashboardPage: React.FC = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  // Mobile navigation state
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      if (window.innerWidth > 768) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch initial notes from API
   useEffect(() => {
@@ -76,9 +91,27 @@ const DashboardPage: React.FC = () => {
       });
       setNotes([newNote, ...notes]);
       setCurrentNoteId(newNote._id);
+      // On mobile, close sidebar and show editor
+      if (isMobile) {
+        setIsMobileSidebarOpen(false);
+      }
     } catch (err) {
       setError('Failed to create new note.');
     }
+  };
+
+  // Handler for selecting a note (with mobile navigation)
+  const handleSelectNote = (id: string) => {
+    setCurrentNoteId(id);
+    // On mobile, close sidebar after selecting note
+    if (isMobile) {
+      setIsMobileSidebarOpen(false);
+    }
+  };
+
+  // Handler for closing editor on mobile
+  const handleCloseEditor = () => {
+    setCurrentNoteId(null);
   };
 
   // Handler to delete a note
@@ -150,6 +183,32 @@ const DashboardPage: React.FC = () => {
         {/* New Header from index.html */}
         <div className="app-header">
           <div className="header-left">
+            {/* Mobile Menu Button */}
+            {isMobile && !currentNoteId && (
+              <button 
+                className="mobile-menu-btn" 
+                onClick={() => setIsMobileSidebarOpen(true)}
+                aria-label="Open menu"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+            )}
+            {/* Mobile Back Button */}
+            {isMobile && currentNoteId && (
+              <button 
+                className="mobile-back-btn" 
+                onClick={handleCloseEditor}
+                aria-label="Back to notes"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+            )}
             <div className="header-logo">
               <HeaderLogo />
             </div>
@@ -168,7 +227,7 @@ const DashboardPage: React.FC = () => {
             </button>
             <button className="logout-btn" onClick={logout}>
               <SignOutIcon />
-              Sign Out
+              {!isMobile && <span>Sign Out</span>}
             </button>
           </div>
         </div>
@@ -181,31 +240,83 @@ const DashboardPage: React.FC = () => {
           </div>
         )}
 
-        <div className="notes-container">
+        <div className={`notes-container ${isMobileSidebarOpen ? 'mobile-sidebar-open' : ''}`}>
           {isLoading ? (
             <div style={{ padding: '20px' }}>Loading notes...</div>
           ) : (
-            <NotesSidebar
-              notes={filteredNotes} // Pass filtered notes
-              currentNoteId={currentNoteId}
-              onNewNote={handleNewNote}
-              onSelectNote={(id: string) => { setCurrentNoteId(id); }}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              isArchive={showArchive}
-              onDeleteArchived={async (id: string) => {
-                const confirmDelete = window.confirm('Are you sure you want to permanently delete this note?');
-                if (!confirmDelete) return;
-                try {
-                  await api.deleteArchivedNote(id);
-                  await fetchArchived();
-                } catch (err) {
-                  setError('Failed to permanently delete archived note.');
-                }
+            <div className={`notes-sidebar ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
+              {/* Mobile sidebar close button */}
+              {isMobile && isMobileSidebarOpen && (
+                <div 
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    padding: '16px',
+                    zIndex: 101,
+                  }}
+                >
+                  <button
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      width: '36px',
+                      height: '36px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      color: '#475569',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                    }}
+                    aria-label="Close sidebar"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              <NotesSidebar
+                notes={filteredNotes} // Pass filtered notes
+                currentNoteId={currentNoteId}
+                onNewNote={handleNewNote}
+                onSelectNote={handleSelectNote}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                isArchive={showArchive}
+                onDeleteArchived={async (id: string) => {
+                  const confirmDelete = window.confirm('Are you sure you want to permanently delete this note?');
+                  if (!confirmDelete) return;
+                  try {
+                    await api.deleteArchivedNote(id);
+                    await fetchArchived();
+                  } catch (err) {
+                    setError('Failed to permanently delete archived note.');
+                  }
+                }}
+              />
+            </div>
+          )}
+          {/* Click backdrop to close sidebar */}
+          {isMobile && isMobileSidebarOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                background: 'rgba(0, 0, 0, 0.5)',
+                zIndex: 99,
               }}
+              onClick={() => setIsMobileSidebarOpen(false)}
             />
           )}
-          <div className="editor-container">
+          <div className={`editor-container ${isMobile && currentNoteId ? 'mobile-open' : ''}`}>
             {activeNote ? (
               <NoteEditor
                 key={activeNote._id} // Force re-render when note changes
@@ -215,7 +326,7 @@ const DashboardPage: React.FC = () => {
                 readOnly={showArchive}
               />
             ) : (
-              <EmptyState />
+              !isMobile && <EmptyState />
             )}
           </div>
         </div>
