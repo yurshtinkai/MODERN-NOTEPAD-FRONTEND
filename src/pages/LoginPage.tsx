@@ -53,11 +53,29 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     try {
       const cleanUsername = username.trim();
-      const { data } = await loginUser({ username: cleanUsername, password });
+      const cleanPassword = password.trim();
+      
+      if (!cleanUsername || !cleanPassword) {
+        setError('Please enter both username and password');
+        setIsLoading(false);
+        return;
+      }
+
+      const { data } = await loginUser({ username: cleanUsername, password: cleanPassword });
       login(data.token, data.user);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Login failed. Please try again.');
+      console.error('Login error:', err);
+      // Better error message handling
+      if (err?.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+        setError('Request timed out. Please try again.');
+      } else if (err?.code === 'ERR_NETWORK' || err?.message?.includes('Network Error')) {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError('Login failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

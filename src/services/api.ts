@@ -36,9 +36,33 @@ export const ping = async () => {
   }
 };
 
+// Retry helper for login requests (handles cold starts)
+const retryRequest = async <T>(
+  requestFn: () => Promise<T>,
+  maxRetries: number = 2,
+  delay: number = 1000
+): Promise<T> => {
+  let lastError: any;
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      return await requestFn();
+    } catch (error: any) {
+      lastError = error;
+      // Only retry on network errors or timeout errors
+      const isNetworkError = !error.response || error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK';
+      if (i < maxRetries && isNetworkError) {
+        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
+};
+
 // --- Auth Endpoints ---
 export const registerUser = (data: any) => api.post('/auth/register', data);
-export const loginUser = (data: any) => api.post<AuthResponse>('/auth/login', data);
+export const loginUser = (data: any) => retryRequest(() => api.post<AuthResponse>('/auth/login', data));
 export const changePassword = (data: { currentPassword: string; newPassword: string }) =>
   api.post('/auth/change-password', data);
 
