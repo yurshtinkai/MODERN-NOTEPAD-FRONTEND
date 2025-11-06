@@ -3,10 +3,21 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import type { Note } from '../types';
 import * as api from '../services/api';
+import { syncService } from '../services/syncService';
 import { NotesSidebar } from '../components/notes/NotesSidebar';
 import { NoteEditor } from '../components/notes/NoteEditor';
 import { EmptyState } from '../components/notes/EmptyState';
 import ProfileModal from '../components/profile/ProfileModal';
+
+// Add pulse animation for offline indicator
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+`;
+document.head.appendChild(style);
 
 // --- SVGs for the new Header ---
 const HeaderLogo = () => (
@@ -38,6 +49,7 @@ const DashboardPage: React.FC = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(window.innerWidth <= 768);
@@ -59,19 +71,36 @@ const DashboardPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [currentNoteId]);
 
-  // Fetch initial notes from API
+  // Subscribe to online/offline status
   useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        setIsLoading(true);
-        const { data } = await api.getNotes();
-        setNotes(data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-      } catch (err) {
-        setError('Failed to fetch notes.');
-      } finally {
-        setIsLoading(false);
+    const unsubscribe = syncService.onStatusChange((online) => {
+      setIsOnline(online);
+      if (online) {
+        // When coming back online, sync and refresh notes
+        syncService.sync().then(() => {
+          fetchNotes();
+        });
       }
-    };
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Fetch notes (works offline too)
+  const fetchNotes = async () => {
+    try {
+      setIsLoading(true);
+      const allNotes = await syncService.getAllNotes();
+      setNotes(allNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    } catch (err) {
+      setError('Failed to fetch notes.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch initial notes
+  useEffect(() => {
     fetchNotes();
   }, []);
 
@@ -88,12 +117,28 @@ const DashboardPage: React.FC = () => {
   // Handler to create a new note
   const handleNewNote = async () => {
     try {
-      const { data: newNote } = await api.createNote({
-        title: '',
-        content: '',
-      });
-      setNotes([newNote, ...notes]);
-      setCurrentNoteId(newNote._id);
+      if (isOnline) {
+        // Online: create on server
+        const { data: newNote } = await api.createNote({
+          title: '',
+          content: '',
+        });
+        setNotes([newNote, ...notes]);
+        setCurrentNoteId(newNote._id);
+      } else {
+        // Offline: create locally
+        const tempId = `offline-${Date.now()}`;
+        const newNote: Note = {
+          _id: tempId,
+          title: '',
+          content: '',
+          createdAt: new Date().toISOString(),
+        };
+        await syncService.saveNoteOffline(newNote);
+        await syncService.queueOperation('create', tempId, { title: '', content: '' });
+        setNotes([newNote, ...notes]);
+        setCurrentNoteId(tempId);
+      }
       if (isMobile) {
         setIsMobileSidebarOpen(false);
       }
@@ -128,7 +173,13 @@ const DashboardPage: React.FC = () => {
   // Handler to delete a note
   const handleDeleteNote = async (id: string) => {
     try {
-      await api.deleteNote(id);
+      if (isOnline) {
+        // Online: delete on server
+        await api.deleteNote(id);
+      } else {
+        // Offline: queue for deletion
+        await syncService.queueOperation('delete', id);
+      }
       setNotes(notes.filter((note) => note._id !== id));
       if (showArchive) {
         fetchArchived();
@@ -145,12 +196,29 @@ const DashboardPage: React.FC = () => {
     data: { title: string; content: string }
   ) => {
     try {
-      const { data: updatedNote } = await api.updateNote(id, data);
-      
-      const newNotes = notes.map((n) => (n._id === id ? updatedNote : n));
-      
-      setNotes(newNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-
+      if (isOnline) {
+        // Online: update on server
+        const { data: updatedNote } = await api.updateNote(id, data);
+        const newNotes = notes.map((n) => (n._id === id ? updatedNote : n));
+        setNotes(newNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      } else {
+        // Offline: save locally and queue for sync
+        const currentNote = notes.find(n => n._id === id);
+        if (currentNote) {
+          const updatedNote: Note = {
+            ...currentNote,
+            ...data,
+            lastModified: Date.now(),
+            isOffline: true,
+          };
+          await syncService.saveNoteOffline(updatedNote);
+          await syncService.queueOperation('update', id, data);
+          
+          // Update local state
+          const newNotes = notes.map((n) => (n._id === id ? updatedNote : n));
+          setNotes(newNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+        }
+      }
     } catch (err) {
       setError('Failed to save note.');
     }
@@ -220,6 +288,33 @@ const DashboardPage: React.FC = () => {
             <h1>Modern Notepad</h1>
           </div>
           <div className="header-right">
+            {/* Online/Offline Status Indicator */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginRight: '16px',
+                padding: '4px 12px',
+                borderRadius: '12px',
+                backgroundColor: isOnline ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                color: isOnline ? '#22c55e' : '#ef4444',
+                fontSize: '12px',
+                fontWeight: 500,
+              }}
+              title={isOnline ? 'Online - Changes will sync automatically' : 'Offline - Changes saved locally'}
+            >
+              <div
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: isOnline ? '#22c55e' : '#ef4444',
+                  animation: isOnline ? 'none' : 'pulse 2s infinite',
+                }}
+              />
+              <span>{isOnline ? 'Online' : 'Offline'}</span>
+            </div>
             <div
               className="user-info"
               style={{ cursor: 'pointer' }}

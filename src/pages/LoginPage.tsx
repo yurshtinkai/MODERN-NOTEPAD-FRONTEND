@@ -1,5 +1,5 @@
 // src/pages/LoginPage.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { loginUser } from '../services/api';
@@ -44,12 +44,34 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    // Check if offline
+    if (!isOnline) {
+      setError('You are currently offline. Login requires an internet connection. If you were previously logged in, you can access your notes offline.');
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const cleanUsername = username.trim();
@@ -179,9 +201,24 @@ const LoginPage: React.FC = () => {
                 </div>
               </div>
 
+              {!isOnline && (
+                <div style={{
+                  padding: '12px',
+                  marginBottom: '16px',
+                  backgroundColor: '#fef3c7',
+                  border: '1px solid #fbbf24',
+                  borderRadius: '8px',
+                  color: '#92400e',
+                  fontSize: '14px',
+                }}>
+                  <strong>⚠️ Offline Mode:</strong> You are currently offline. Login requires an internet connection. 
+                  If you were previously logged in, close and reopen the app to access your notes offline.
+                </div>
+              )}
+
               {error && <div className="error-message" role="alert">{error}</div>}
 
-              <button type="submit" className="btn" disabled={isLoading} aria-disabled={isLoading}>
+              <button type="submit" className="btn" disabled={isLoading || !isOnline} aria-disabled={isLoading || !isOnline}>
                 {isLoading ? 'Signing in...' : (
                   <>
                     <LoginIcon />

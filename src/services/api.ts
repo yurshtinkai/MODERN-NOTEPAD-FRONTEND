@@ -68,11 +68,11 @@ export const changePassword = (data: { currentPassword: string; newPassword: str
 
 // --- Notes Endpoints ---
 export const getNotes = () => api.get<Note[]>('/notes');
-export const createNote = (data: { title: string; content: string }) =>
+export const createNote = (data: { title: string; content: string; reminderDatetime?: string | null }) =>
   api.post<Note>('/notes', data);
 export const updateNote = (
   id: string,
-  data: { title: string; content: string }
+  data: { title: string; content: string; reminderDatetime?: string | null }
 ) => api.put<Note>(`/notes/${id}`, data);
 export const deleteNote = (id: string) => api.delete(`/notes/${id}`);
 export const getArchivedNotes = () => api.get('/notes/archive');
