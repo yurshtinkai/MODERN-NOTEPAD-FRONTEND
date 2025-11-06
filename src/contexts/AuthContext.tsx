@@ -25,6 +25,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Proactively ping backend to warm it up (helps avoid first-request failures on cold starts)
+    api.ping();
+
     // Check for token in local storage on initial load
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');

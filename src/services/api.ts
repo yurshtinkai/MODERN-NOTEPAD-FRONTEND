@@ -26,6 +26,16 @@ export const setAuthToken = (token: string | null) => {
   }
 };
 
+// Warm-up/health-check: call this on app load to wake serverless/cold instances
+export const ping = async () => {
+  try {
+    // If baseURL already ends with /api, /health is correct
+    await api.get('/health');
+  } catch (e) {
+    // Ignore errors; this is best-effort warm-up
+  }
+};
+
 // --- Auth Endpoints ---
 export const registerUser = (data: any) => api.post('/auth/register', data);
 export const loginUser = (data: any) => api.post<AuthResponse>('/auth/login', data);
