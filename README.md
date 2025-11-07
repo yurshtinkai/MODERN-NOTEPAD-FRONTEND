@@ -4,14 +4,13 @@ A full-stack, secure note-taking application built with a modern tech stack. Thi
 
 ## 🚀 Live Demo
 
-*(Link to your deployed Render frontend URL here)*
+https://modern-notepad.onrender.com
 
 ## 📸 Screenshots
 
-*(Add your screenshots here!)*
 | Login Page | Dashboard | Profile Modal |
 | :---: | :---: | :---: |
-| ![Login Page](notepad1.png) | ![Dashboard](notepad2.png) | *(Add Profile Modal screenshot)* |
+| ![Login Page](public/notepad1.png) | ![Dashboard](public/notepad2.png) | public/notepad3.png|
 
 ## ✨ Features
 

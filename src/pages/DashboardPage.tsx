@@ -50,6 +50,8 @@ const DashboardPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [pendingArchiveDelete, setPendingArchiveDelete] = useState<string | null>(null);
+  const [isDeletingArchived, setIsDeletingArchived] = useState(false);
   
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(window.innerWidth <= 768);
@@ -173,14 +175,12 @@ const DashboardPage: React.FC = () => {
   // Handler to delete a note
   const handleDeleteNote = async (id: string) => {
     try {
-      if (isOnline) {
-        // Online: delete on server
-        await api.deleteNote(id);
-      } else {
-        // Offline: queue for deletion
-        await syncService.queueOperation('delete', id);
-      }
-      setNotes(notes.filter((note) => note._id !== id));
+      await syncService.deleteNote(id);
+
+      // Remove note from local state (handle both offline and resolved ids)
+      const resolvedId = notes.find((note) => note._id === id)?._id || id;
+      const newNotes = notes.filter((note) => note._id !== id && note._id !== resolvedId);
+      setNotes(newNotes);
       if (showArchive) {
         fetchArchived();
       }
@@ -236,6 +236,11 @@ const DashboardPage: React.FC = () => {
     const source = showArchive ? archived : notes;
     return source.find((note) => note._id === currentNoteId) || null;
   }, [currentNoteId, notes, archived, showArchive]);
+
+  const pendingArchivedNote = useMemo(() => {
+    if (!pendingArchiveDelete) return null;
+    return archived.find((note) => note._id === pendingArchiveDelete) || null;
+  }, [archived, pendingArchiveDelete]);
 
   // Get user details for header
   const userName = user?.username || 'User';
@@ -368,16 +373,9 @@ const DashboardPage: React.FC = () => {
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
                 isArchive={showArchive}
-                onDeleteArchived={async (id: string) => {
-                  const confirmDelete = window.confirm('Are you sure you want to permanently delete this note?');
-                  if (!confirmDelete) return;
-                  try {
-                    await api.deleteArchivedNote(id);
-                    await fetchArchived();
-                  } catch (err) {
-                    setError('Failed to permanently delete archived note.');
-                  }
-                }}
+            onDeleteArchived={(id: string) => {
+              setPendingArchiveDelete(id);
+            }}
               />
             </div>
           )}
@@ -418,6 +416,98 @@ const DashboardPage: React.FC = () => {
         notes={notes}
         isOnline={isOnline}
       />
+
+      {pendingArchiveDelete && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 200,
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-archive-delete-title"
+            aria-describedby="confirm-archive-delete-description"
+            style={{
+              width: 'min(420px, 92%)',
+              background: '#fff',
+              borderRadius: 16,
+              padding: '24px',
+              boxShadow: '0 30px 60px rgba(15,23,42,0.25)',
+            }}
+          >
+            <h3
+              id="confirm-archive-delete-title"
+              style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px', color: '#1f2937' }}
+            >
+              Permanently delete note?
+            </h3>
+            <p
+              id="confirm-archive-delete-description"
+              style={{ fontSize: '14px', color: '#4b5563', marginBottom: '20px', lineHeight: 1.5 }}
+            >
+              This action cannot be undone. The note
+              {pendingArchivedNote ? ` "${pendingArchivedNote.title || 'Untitled Note'}"` : ''} will be permanently removed from your archive.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isDeletingArchived) return;
+                  setPendingArchiveDelete(null);
+                }}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: 999,
+                  border: '1px solid #d1d5db',
+                  background: '#fff',
+                  color: '#374151',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+                disabled={isDeletingArchived}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!pendingArchiveDelete) return;
+                  setIsDeletingArchived(true);
+                  try {
+                    await api.deleteArchivedNote(pendingArchiveDelete);
+                    await fetchArchived();
+                    setPendingArchiveDelete(null);
+                  } catch (err) {
+                    setError('Failed to permanently delete archived note.');
+                  } finally {
+                    setIsDeletingArchived(false);
+                  }
+                }}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: 999,
+                  border: 'none',
+                  background: '#dc2626',
+                  color: '#fff',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  opacity: isDeletingArchived ? 0.7 : 1,
+                }}
+                disabled={isDeletingArchived}
+              >
+                {isDeletingArchived ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -80,6 +80,18 @@ class SyncService {
     }
   }
 
+  private removeFromCachedNotes(noteId: string) {
+    try {
+      const cached = localStorage.getItem('notepad_cached_notes');
+      if (!cached) return;
+      const notes = JSON.parse(cached) as Note[];
+      const filtered = notes.filter((note) => note._id !== noteId);
+      localStorage.setItem('notepad_cached_notes', JSON.stringify(filtered));
+    } catch (error) {
+      console.warn('Failed to update cached notes', error);
+    }
+  }
+
   getOnlineStatus(): boolean {
     return this.isOnline;
   }
@@ -243,6 +255,26 @@ class SyncService {
   // Save note offline
   async saveNoteOffline(note: Note): Promise<void> {
     await offlineStorage.saveNote(note);
+  }
+
+  async deleteNote(noteId: string): Promise<void> {
+    if (this.isOnline) {
+      const resolvedId = this.resolveNoteId(noteId);
+      await api.deleteNote(resolvedId);
+
+      if (noteId !== resolvedId) {
+        this.offlineIdMap.delete(noteId);
+        this.persistIdMap();
+      }
+
+      await offlineStorage.deleteNote(noteId);
+      await offlineStorage.deleteNote(resolvedId);
+      this.removeFromCachedNotes(resolvedId);
+    } else {
+      await this.queueOperation('delete', noteId);
+      await offlineStorage.deleteNote(noteId);
+      this.removeFromCachedNotes(noteId);
+    }
   }
 
   // Get all notes (offline + online)
