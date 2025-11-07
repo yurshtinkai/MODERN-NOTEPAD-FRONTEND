@@ -81,6 +81,36 @@ class OfflineStorage {
     });
   }
 
+  // Bulk save notes (used when online to refresh local cache)
+  async saveNotes(notes: Note[]): Promise<void> {
+    if (!this.db) await this.init();
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+
+      // Clear existing notes before inserting fresh copies
+      store.clear();
+
+      notes.forEach((note) => {
+        const lastModified = note.lastModified
+          ? Number(note.lastModified)
+          : note.createdAt
+          ? new Date(note.createdAt).getTime()
+          : Date.now();
+
+        store.put({
+          ...note,
+          isOffline: false,
+          lastModified,
+        });
+      });
+
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+  }
+
   // Get all notes from offline storage
   async getAllNotes(): Promise<Note[]> {
     if (!this.db) await this.init();

@@ -288,33 +288,6 @@ const DashboardPage: React.FC = () => {
             <h1>Modern Notepad</h1>
           </div>
           <div className="header-right">
-            {/* Online/Offline Status Indicator */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginRight: '16px',
-                padding: '4px 12px',
-                borderRadius: '12px',
-                backgroundColor: isOnline ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                color: isOnline ? '#22c55e' : '#ef4444',
-                fontSize: '12px',
-                fontWeight: 500,
-              }}
-              title={isOnline ? 'Online - Changes will sync automatically' : 'Offline - Changes saved locally'}
-            >
-              <div
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: isOnline ? '#22c55e' : '#ef4444',
-                  animation: isOnline ? 'none' : 'pulse 2s infinite',
-                }}
-              />
-              <span>{isOnline ? 'Online' : 'Offline'}</span>
-            </div>
             <div
               className="user-info"
               style={{ cursor: 'pointer' }}
@@ -443,6 +416,7 @@ const DashboardPage: React.FC = () => {
         onClose={() => setIsProfileOpen(false)}
         userName={userName}
         notes={notes}
+        isOnline={isOnline}
       />
     </>
   );

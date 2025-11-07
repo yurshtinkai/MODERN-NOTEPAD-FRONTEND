@@ -129,6 +129,9 @@ class SyncService {
       // Get online notes
       const { data: onlineNotes } = await api.getNotes();
 
+      // Update offline cache with latest online notes
+      await offlineStorage.saveNotes(onlineNotes);
+
       // Create a map of online notes by ID
       const onlineNotesMap = new Map(onlineNotes.map(note => [note._id, note]));
 
@@ -200,6 +203,9 @@ class SyncService {
       try {
         const { data: onlineNotes } = await api.getNotes();
         
+        // Cache online notes for offline usage
+        await offlineStorage.saveNotes(onlineNotes);
+
         // Merge offline and online notes
         const notesMap = new Map<string, Note>();
         
