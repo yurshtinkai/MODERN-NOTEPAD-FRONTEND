@@ -17,10 +17,22 @@ class SyncService {
   private isOnline: boolean = navigator.onLine;
   private syncInProgress: boolean = false;
   private listeners: Array<(isOnline: boolean) => void> = [];
+  private offlineIdMap: Map<string, string> = new Map();
 
   constructor() {
     // Initialize offline storage
     offlineStorage.init().catch(console.error);
+
+    // Load offline -> online id mapping from localStorage
+    try {
+      const storedMap = localStorage.getItem('notepad_offline_id_map');
+      if (storedMap) {
+        const entries: [string, string][] = JSON.parse(storedMap);
+        this.offlineIdMap = new Map(entries);
+      }
+    } catch (error) {
+      console.warn('Failed to load offline id map', error);
+    }
 
     // Listen for online/offline events
     window.addEventListener('online', () => {
@@ -54,6 +66,18 @@ class SyncService {
 
   private notifyListeners(isOnline: boolean) {
     this.listeners.forEach(callback => callback(isOnline));
+  }
+
+  private resolveNoteId(noteId: string): string {
+    return this.offlineIdMap.get(noteId) || noteId;
+  }
+
+  private persistIdMap() {
+    try {
+      localStorage.setItem('notepad_offline_id_map', JSON.stringify(Array.from(this.offlineIdMap.entries())));
+    } catch (error) {
+      console.warn('Failed to persist offline id map', error);
+    }
   }
 
   getOnlineStatus(): boolean {
@@ -108,14 +132,40 @@ class SyncService {
     switch (operation.type) {
       case 'create':
         if (operation.data) {
-          await api.createNote(operation.data);
+          const { data: createdNote } = await api.createNote(operation.data);
+
+          if (createdNote && operation.noteId.startsWith('offline-')) {
+            this.offlineIdMap.set(operation.noteId, createdNote._id);
+            this.persistIdMap();
+
+            // Replace offline note with server version in offline storage
+            await offlineStorage.deleteNote(operation.noteId);
+            await offlineStorage.saveNote({
+              ...createdNote,
+              isOffline: false,
+              lastModified: Date.now(),
+            });
+          }
         }
         break;
       case 'update':
-        await api.updateNote(operation.noteId, operation.data || {});
+        {
+          const resolvedId = this.resolveNoteId(operation.noteId);
+          await api.updateNote(resolvedId, operation.data || {});
+        }
         break;
       case 'delete':
-        await api.deleteNote(operation.noteId);
+        {
+          const resolvedId = this.resolveNoteId(operation.noteId);
+          await api.deleteNote(resolvedId);
+          // Clean up mapping if present
+          for (const [offlineId, onlineId] of this.offlineIdMap.entries()) {
+            if (onlineId === resolvedId) {
+              this.offlineIdMap.delete(offlineId);
+            }
+          }
+          this.persistIdMap();
+        }
         break;
     }
   }
