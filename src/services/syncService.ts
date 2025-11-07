@@ -205,6 +205,11 @@ class SyncService {
         
         // Cache online notes for offline usage
         await offlineStorage.saveNotes(onlineNotes);
+        try {
+          localStorage.setItem('notepad_cached_notes', JSON.stringify(onlineNotes));
+        } catch (error) {
+          console.warn('Failed to cache notes in localStorage', error);
+        }
 
         // Merge offline and online notes
         const notesMap = new Map<string, Note>();
@@ -227,6 +232,20 @@ class SyncService {
       }
     }
     
+    if (offlineNotes.length > 0) {
+      return offlineNotes;
+    }
+
+    try {
+      const cached = localStorage.getItem('notepad_cached_notes');
+      if (cached) {
+        const parsed = JSON.parse(cached) as Note[];
+        return parsed;
+      }
+    } catch (error) {
+      console.warn('Failed to load cached notes from localStorage', error);
+    }
+
     return offlineNotes;
   }
 }
