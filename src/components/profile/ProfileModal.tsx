@@ -26,7 +26,7 @@ function timeSinceDays(startMs: number): number {
   return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
 }
 
-const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userName, notes, isOnline }) => {
+const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userName, notes }) => {
   const [email, setEmail] = useState('user@example.com');
   const [bio, setBio] = useState('');
   const [joinDateMs, setJoinDateMs] = useState<number>(() => {
@@ -82,34 +82,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userName, 
             <div className="profile-details">
               <h2 className="profile-name">{userName}</h2>
               <p className="profile-role">Content Writer & Note Enthusiast</p>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '4px 12px',
-                    borderRadius: 999,
-                    backgroundColor: isOnline ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                    color: isOnline ? '#16a34a' : '#dc2626',
-                    fontSize: 12,
-                    fontWeight: 600,
-                  }}
-                  title={isOnline ? 'Online - Changes will sync automatically' : 'Offline - Changes saved locally'}
-                >
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      backgroundColor: isOnline ? '#22c55e' : '#ef4444',
-                      animation: isOnline ? 'none' : 'pulse 2s infinite',
-                    }}
-                  />
-                  {isOnline ? 'Online' : 'Offline'}
-                </div>
-              </div>
+
               <div className="profile-stats">
                 <div className="profile-stat">
                   <div className="profile-stat-number">{stats.totalNotes}</div>

@@ -10,7 +10,7 @@ https://modern-notepad.onrender.com
 
 | Login Page | Dashboard | Profile Modal |
 | :---: | :---: | :---: |
-| ![Login Page](public/notepad1.png) | ![Dashboard](public/notepad2.png) | public/notepad3.png|
+| ![Login Page](public/notepad1.png) | ![Dashboard](public/notepad2.png) | ![Profile Modal](public/notepad3.png)|
 
 ## ✨ Features
 
