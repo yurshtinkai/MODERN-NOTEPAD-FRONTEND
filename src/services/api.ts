@@ -14,7 +14,7 @@ const baseURL = API_BASE_URL.endsWith('/api')
 
 const api = axios.create({
   baseURL,
-  timeout: 10000,
+  timeout: 30000,
 });
 
 // Function to set the auth token for all future requests
@@ -39,7 +39,7 @@ export const ping = async () => {
 // Retry helper for login requests (handles cold starts)
 const retryRequest = async <T>(
   requestFn: () => Promise<T>,
-  maxRetries: number = 2,
+  maxRetries: number = 3,
   delay: number = 1000
 ): Promise<T> => {
   let lastError: any;
