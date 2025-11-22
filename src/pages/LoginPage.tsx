@@ -160,7 +160,7 @@ const LoginPage: React.FC = () => {
           {/* This wrapper div centers and nudges the content */}
           <div className="auth-right-content">
             <div className="login-header login-header--login">
-              <h2 className="login-title">Welcome back</h2>
+              <h2 className="login-title">Your Workspace Awaits</h2>
               <p className="login-subtitle">Log in to access your notes</p>
             </div>
 
